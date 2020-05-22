@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 	"time"
-
-    "github.com/labstack/echo"
+	
+	"github.com/labstack/echo"
 	"github.com/dgrijalva/jwt-go"
 
 	"../db"
