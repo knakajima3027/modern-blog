@@ -1,55 +1,63 @@
 package handler
 
 import (
-	"net/http"
-	"time"
-	
-	"github.com/labstack/echo"
-	"github.com/dgrijalva/jwt-go"
-
+    "net/http"
+    
+    "github.com/labstack/echo"
+    "github.com/gorilla/sessions"
+    "github.com/labstack/echo-contrib/session"
 	"../db"
-	"../models"
+    "../models"
+    "fmt"
 )
 
-type jwtCustomClaims struct {
-    UserId  string    `json:"uid"`
-    Name string `json:"name"`
-    jwt.StandardClaims
+func Login() echo.HandlerFunc {
+    return func(c echo.Context) error {
+        userid := c.FormValue("userid")
+        password := c.FormValue("password")
+
+        user := models.User{}
+        db.GetDB().Where("user_id = ?", userid).Find(&user)
+
+        if user.Password != password {
+            return &echo.HTTPError{
+                Code:    http.StatusUnauthorized,
+                Message: "invalid name or password",
+            }
+        }
+        
+        sess, _ := session.Get("session", c)
+
+        fmt.Println(sess)
+
+        sess.Options = &sessions.Options{
+            MaxAge:   86400 * 7,
+            HttpOnly: true,
+        }
+
+        sess.Values["auth"] = true
+
+        if err:=sess.Save(c.Request(), c.Response());err!=nil{
+            return c.NoContent(http.StatusInternalServerError)
+        }
+
+        return c.NoContent(http.StatusOK)
+    }
 }
 
-var signingKey = []byte("secret-key")
-
-// JWTによる認証でログイン状態を管理する
-func Login(c echo.Context) error {
-	userid := c.Param("user_id")
-	password := c.Param("password")
-
-	user := models.User{}
-	db.GetDB().Where("user_id = ?", userid).Find(&user)
-
-    if user.Password != password {
-        return &echo.HTTPError{
-            Code:    http.StatusUnauthorized,
-            Message: "invalid name or password",
+func Secret() echo.HandlerFunc{
+    return func(c echo.Context)error{
+        
+        sess, err := session.Get("session", c)
+        if err!=nil {
+            fmt.Println(err)
+            return c.String(http.StatusInternalServerError, "Error")
         }
-	}
-
-	claims :=  &jwtCustomClaims {
-		user.UserId,
-		user.Name,
-        jwt.StandardClaims {
-            ExpiresAt: time.Now().Add(time.Hour * 72).Unix(),
-        },
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    
-    t, err := token.SignedString(signingKey)
-    if err != nil {
-        return err
+        
+        if b, _:=sess.Values["auth"];b!=true{
+            return c.String(http.StatusUnauthorized, "401")
+        }else {
+            return c.String(http.StatusOK, "hey!")
+        }
     }
-
-    return c.JSON(http.StatusOK, map[string]string{
-        "token": t,
-    })
 }
