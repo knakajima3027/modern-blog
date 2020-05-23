@@ -45,6 +45,7 @@ func Login() echo.HandlerFunc {
     }
 }
 
+// ログイン状態なら「hey」と返す
 func Secret() echo.HandlerFunc{
     return func(c echo.Context)error{
         
