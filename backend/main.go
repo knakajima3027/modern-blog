@@ -41,6 +41,8 @@ func main() {
 	//Test()
 	//CreateAdmin()
 
+	e.Static("/","public/")
+
 	// ルーティング
 
 	//管理ユーザー関連	
