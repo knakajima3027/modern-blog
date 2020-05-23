@@ -31,7 +31,7 @@ func Login() echo.HandlerFunc {
         fmt.Println(sess)
 
         sess.Options = &sessions.Options{
-            MaxAge:   86400 * 7,
+            MaxAge:   86400 * 3, // cookie有効期限 (3日)
             HttpOnly: true,
         }
 
@@ -45,9 +45,20 @@ func Login() echo.HandlerFunc {
     }
 }
 
+func Logout() echo.HandlerFunc {
+    return func(c echo.Context)error { 
+        sess, _ := session.Get("session", c)
+        sess.Values["auth"]=false
+        if err:=sess.Save(c.Request(), c.Response());err!=nil{
+            return c.NoContent(http.StatusInternalServerError)
+        }
+        return c.NoContent(http.StatusOK)
+    }
+}
+
 // ログイン状態なら「hey」と返す
-func Secret() echo.HandlerFunc{
-    return func(c echo.Context)error{
+func Secret() echo.HandlerFunc {
+    return func(c echo.Context)error {
         
         sess, err := session.Get("session", c)
         if err!=nil {

@@ -45,6 +45,7 @@ func main() {
 
 	//管理ユーザー関連	
 	e.POST("/login", handler.Login())
+	e.GET("/logout", handler.Logout())
 	e.GET("/secret", handler.Secret())
 
 	// 記事関連
